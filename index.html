@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer">
+    <title>StudyHive | Pro Planner</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        /* --- CSS VARIABLES --- */
+        :root {
+            --bg-main: #f0f4f8;
+            --bg-panel: #ffffff;
+            --text-main: #2c3e50;
+            --text-muted: #636e72;
+            --border-color: #e2e8f0;
+            --accent-color: #00b894;
+            --hover-bg: #e8f8f5;
+            --input-bg: #ffffff;
+            --shadow: rgba(0,0,0,0.05);
+        }
+
+        [data-theme="dark"] {
+            --bg-main: #0f172a;
+            --bg-panel: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            --accent-color: #10b981;
+            --hover-bg: #064e3b;
+            --input-bg: #0f172a;
+            --shadow: rgba(0,0,0,0.3);
+        }
+
+        /* --- CORE LAYOUT --- */
+        * { box-sizing: border-box; transition: background-color 0.3s, color 0.3s, box-shadow 0.3s; }
+        body { margin: 0; padding: 0; display: flex; height: 100vh; overflow: hidden; background-color: var(--bg-main); font-family: 'Segoe UI', sans-serif; color: var(--text-main); }
+        
+        /* --- 1. LEFT SIDEBAR --- */
+        .sidebar { width: 260px; background: var(--bg-panel); border-right: 1px solid var(--border-color); padding: 25px 20px; display: flex; flex-direction: column; gap: 15px; z-index: 10; }
+        .brand { font-size: 24px; font-weight: bold; color: var(--accent-color); display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+        #user-info { display: flex; flex-direction: column; gap: 10px; font-weight: bold; font-size: 14px; background: var(--bg-main); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); }
+        .user-avatar-top { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--accent-color); }
+        
+        .nav-menu { display: flex; flex-direction: column; gap: 4px; }
+        .nav-category { font-size: 11px; color: var(--text-muted); font-weight: 700; margin: 15px 0 5px 10px; letter-spacing: 1px; text-transform: uppercase; }
+        .nav-item { padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: 600; color: var(--text-muted); transition: 0.2s; display: flex; align-items: center; gap: 10px; font-size: 14px; }
+        .nav-item:hover, .nav-item.active { background: var(--hover-bg); color: var(--accent-color); }
+        
+        .sidebar-bottom { margin-top: auto; }
+        .progress-dashboard { background: var(--bg-main); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); }
+        .progress-track { width: 100%; height: 8px; background: var(--border-color); border-radius: 10px; margin-top: 10px; }
+        .progress-fill { height: 100%; background: var(--accent-color); width: 0%; border-radius: 10px;}
+
+        /* --- 2. MAIN DASHBOARD --- */
+        .main-dashboard { flex: 1; padding: 30px 40px; overflow-y: auto; display: flex; justify-content: center; }
+        .dashboard-content { max-width: 800px; width: 100%; display: flex; flex-direction: column; gap: 25px; }
+        
+        .block-label { font-size: 12px; font-weight: bold; color: var(--text-muted); text-transform: uppercase; margin-bottom: 15px; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; justify-content: center;}
+        .block-label-left { justify-content: flex-start; margin-bottom: 12px; }
+
+        .pomodoro-box { background: var(--bg-panel); border-radius: 12px; text-align: center; border: 2px solid var(--border-color); box-shadow: 0 4px 6px var(--shadow); }
+        .timer-display { font-weight: bold; color: #d63031; font-family: monospace; letter-spacing: 2px; }
+        
+        .input-area { display: flex; flex-direction: column; gap: 15px; background: var(--bg-panel); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px var(--shadow); border: 1px solid var(--border-color); }
+        .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        input, select { padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main); font-family: inherit; }
+        .add-btn { background: var(--accent-color); color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; border: 1px solid transparent; }
+        .add-btn:hover { filter: brightness(1.1); }
+        
+        .section-title { font-size: 14px; font-weight: bold; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin: 25px 0 10px 0; border-bottom: 2px solid var(--border-color); padding-bottom: 5px;}
+        .empty-state { text-align: center; padding: 30px; color: var(--text-muted); font-size: 16px; font-weight: 500; background: var(--bg-main); border-radius: 12px; border: 2px dashed var(--border-color); margin-top: 10px; }
+        
+        /* Base Task List Styles */
+        ul { list-style: none; padding: 0; margin: 0; }
+        li { padding: 18px; border-radius: 12px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border-color); transition: transform 0.2s, box-shadow 0.2s; }
+        
+        .badges { display: flex; gap: 6px; font-size: 11px; margin-top: 8px; flex-wrap: wrap; }
+        .badge { padding: 4px 8px; border-radius: 12px; color: white; font-weight: bold; }
+        .author-box { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted); margin-left: auto; background: var(--bg-main); padding: 4px 10px; border-radius: 20px; }
+        .task-avatar { width: 24px; height: 24px; border-radius: 50%; }
+
+        /* --- UX STEP 3 & 5: VISUAL PRIORITY HIERARCHY --- */
+        #titleToday { color: var(--text-main); font-weight: 800; border-bottom: 2px solid var(--accent-color); }
+        #listToday li { border-left: 4px solid var(--accent-color); box-shadow: 0 6px 12px var(--shadow); background: var(--bg-panel); }
+        #listToday li:hover { transform: translateY(-2px); box-shadow: 0 8px 16px var(--shadow); }
+        #listToday .task-title { font-size: 17px; font-weight: 800; color: var(--text-main); }
+        
+        #titleUpcoming { color: var(--text-muted); opacity: 0.9; }
+        #listUpcoming li { border-left: 2px solid var(--border-color); box-shadow: 0 2px 4px var(--shadow); background: var(--bg-main); }
+        #listUpcoming .task-title { font-size: 15px; font-weight: 600; color: var(--text-muted); }
+
+        #titleCompleted { color: var(--text-muted); opacity: 0.6; border-bottom: 1px dashed var(--border-color); }
+        #listCompleted li { opacity: 0.5; box-shadow: none; border: 1px dashed var(--border-color); background: transparent; filter: grayscale(100%); }
+        #listCompleted .task-title { font-size: 15px; font-weight: 500; text-decoration: line-through; color: var(--text-muted); }
+
+        /* --- 3. RIGHT PANEL (CHAT) --- */
+        .right-panel { width: 320px; background: var(--bg-panel); border-left: 1px solid var(--border-color); display: flex; flex-direction: column; z-index: 10; }
+        .chat-header { padding: 20px; border-bottom: 1px solid var(--border-color); font-weight: bold; font-size: 16px; background: var(--bg-panel); display: flex; align-items: center; gap: 10px; }
+        #chatMessages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; background: var(--bg-main); }
+        .chat-input-area { padding: 15px; background: var(--bg-panel); border-top: 1px solid var(--border-color); display: flex; gap: 8px; }
+        .chat-msg { font-size: 14px; padding: 10px 14px; border-radius: 15px; background: var(--bg-panel); border: 1px solid var(--border-color); max-width: 85%; width: fit-content; line-height: 1.4; box-shadow: 0 2px 4px var(--shadow);}
+        .chat-msg.mine { align-self: flex-end; background: var(--accent-color); color: white; border: none; }
+        .chat-user { font-size: 11px; font-weight: bold; margin-bottom: 4px; opacity: 0.8; }
+
+        /* --- 4. CALENDAR UI --- */
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin: 10px 0 25px 0; background: var(--bg-panel); padding: 15px 20px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 6px var(--shadow); }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; }
+        .calendar-day-name { text-align: center; font-weight: 800; color: var(--text-muted); font-size: 13px; text-transform: uppercase; margin-bottom: 5px; }
+        .calendar-day { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 8px; min-height: 110px; padding: 10px; display: flex; flex-direction: column; gap: 5px; transition: transform 0.2s; box-shadow: 0 2px 4px var(--shadow); }
+        .calendar-day:hover { transform: translateY(-2px); box-shadow: 0 6px 12px var(--shadow); }
+        .calendar-day.empty { background: transparent; border: none; box-shadow: none; pointer-events: none; }
+        .calendar-date { font-weight: 800; font-size: 16px; color: var(--text-muted); margin-bottom: 5px; align-self: flex-end; }
+        .calendar-day.today { border: 2px solid var(--accent-color); background: var(--hover-bg); }
+        .calendar-day.today .calendar-date { color: var(--accent-color); }
+        .cal-task { font-size: 11px; font-weight: 600; padding: 5px 8px; border-radius: 6px; background: var(--bg-main); color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-left: 3px solid var(--border-color); }
+        .cal-task.urgent { border-left-color: #ff7675; }
+        .cal-task.completed { text-decoration: line-through; opacity: 0.5; filter: grayscale(100%); }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="brand">🐝 StudyHive</div>
+        <div id="user-info">
+            <span style="color:var(--text-muted); font-weight:normal;">Account</span>
+            <div id="buttonDiv"></div>
+        </div>
+        
+        <div class="nav-menu">
+            <div class="nav-category">Main</div>
+            <div class="nav-item active" id="navDashboard" onclick="switchTab('dashboard')">📋 My Dashboard</div>
+            <div class="nav-item">👥 Team Workspace</div>
+            
+            <div class="nav-category">Tools</div>
+            <div class="nav-item" id="navCalendar" onclick="switchTab('calendar')">📅 Calendar</div>
+            <div class="nav-item">📈 Analytics</div>
+            
+            <div class="nav-category">System</div>
+            <div class="nav-item" onclick="toggleTheme()" id="themeBtn">🌙 Dark Mode</div>
+            <div class="nav-item">⚙️ Settings</div>
+        </div>
+
+        <!-- NEW: SIDEBAR POMODORO -->
+        <div class="pomodoro-box" style="padding: 15px; margin-top: auto; margin-bottom: -5px;">
+            <div class="block-label" style="font-size: 11px; margin-bottom: 8px;">🎯 Active Focus</div>
+            
+            <!-- NEW: Task Selector -->
+            <select id="focusTaskSelector" style="width: 100%; margin-bottom: 10px; font-size: 12px; padding: 8px;">
+                <option value="">What are you working on?</option>
+            </select>
+
+            <div class="timer-display" id="timeDisplay" style="font-size: 36px; margin-bottom: 5px;">25:00</div>
+            
+            <div class="row" style="justify-content:center; gap: 5px;">
+                <button class="add-btn" style="padding: 8px 12px; font-size: 12px;" onclick="startTimer()" title="Start">▶</button>
+                <button class="add-btn" style="background:#b2bec3; color:#2d3436; padding: 8px 12px; font-size: 12px;" onclick="pauseTimer()" title="Pause">⏸</button>
+                <button class="add-btn" style="background:#ff7675; padding: 8px 12px; font-size: 12px;" onclick="setMode(25)" title="25m Focus">🍅</button>
+                <button class="add-btn" style="background:#0984e3; padding: 8px 12px; font-size: 12px;" onclick="setMode(5)" title="5m Break">☕</button>
+            </div>
+        </div>
+
+        <div class="sidebar-bottom">
+            <div class="progress-dashboard">
+                <div style="display:flex; justify-content:space-between; font-size: 13px;">
+                    <span style="font-weight:bold">Team Momentum</span>
+                    <span id="progressText" style="color: var(--accent-color); font-weight:bold;">0%</span>
+                </div>
+                <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-dashboard">
+        <div class="dashboard-content">
+
+            <!-- Wikipedia Quick Search API Integration -->
+            <div class="input-area" id="wikiSection">
+                <div class="block-label block-label-left" style="color:#0984e3;">📚 Quick Study Lookup (Wiki API)</div>
+                <div class="row">
+                    <input type="text" id="wikiInput" placeholder="Search a topic..." style="flex:1">
+                    <button class="add-btn" style="background:#0984e3;" onclick="searchWiki()">Search</button>
+                </div>
+                <div id="wikiResult" style="margin-top:10px; font-size:14px; color:var(--text-main); display:none; padding:15px; background:var(--bg-main); border-radius:8px; border:1px solid var(--border-color);"></div>
+            </div>
+
+            <div class="input-area" id="taskCreatorSection">
+                <div class="block-label block-label-left">📝 Plan Your Next Task</div>
+                <input type="text" id="taskInput" placeholder="What is the next goal?" style="width: 100%; font-size: 16px;">
+                
+                <!-- Resource URL Input -->
+                <input type="text" id="resourceInput" placeholder="🔗 Paste resource link (YouTube, PDF, Drive...)" style="width: 100%; font-size: 14px; margin-top:-5px;">
+                
+                <div class="row">
+                    <input type="date" id="dueDateInput">
+                    <input type="text" id="assignInput" style="flex:1" placeholder="@Assign to...">
+                    <label style="font-weight:bold; font-size:13px;"><input type="checkbox" id="urgentCheck"> 🔥 Urgent</label>
+                    <label style="font-weight:bold; font-size:13px;"><input type="checkbox" id="importantCheck"> ⭐ Important</label>
+                    <select id="sizeSelect" style="font-weight:bold;">
+                        <option value="Pebble">🪨 Pebble</option>
+                        <option value="Big Rock">🏔️ Big Rock</option>
+                    </select>
+                </div>
+                <button class="add-btn" onclick="saveTask()" style="width: 100%; font-size: 16px;">Add to Board</button>
+            </div>
+
+            <div id="emptyState" class="empty-state" style="display: none;">No tasks yet. Start planning 🚀</div>
+
+            <div id="tasksContainer">
+                <div class="section-title" id="titleToday">☀️ Today & Overdue</div>
+                <ul id="listToday"></ul>
+                
+                <div class="section-title" id="titleUpcoming">📅 Upcoming</div>
+                <ul id="listUpcoming"></ul>
+                
+                <div class="section-title" id="titleCompleted">✅ Completed</div>
+                <ul id="listCompleted"></ul>
+            </div>
+
+            <div id="calendarContainer" style="display: none; width: 100%;">
+                <div class="calendar-header">
+                    <button class="add-btn" style="background: var(--bg-main); color: var(--text-main); border: 1px solid var(--border-color);" onclick="changeMonth(-1)">⬅️ Prev</button>
+                    <h2 id="calendarMonthLabel" style="margin: 0; color: var(--text-main); font-weight: 800;">Month Year</h2>
+                    <button class="add-btn" style="background: var(--bg-main); color: var(--text-main); border: 1px solid var(--border-color);" onclick="changeMonth(1)">Next ➡️</button>
+                </div>
+                <div class="calendar-grid" id="calendarGrid"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="right-panel">
+        <div class="chat-header">💬 Team Workspace</div>
+        <div id="chatMessages"></div>
+        <div class="chat-input-area">
+            <input type="text" id="chatInput" placeholder="Message team..." style="flex:1">
+            <button class="add-btn" onclick="sendChatMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000/api/tasks';
+        const socket = io();
+        let currentUser = "Anonymous";
+        let currentUserPic = "";
+
+        // --- CALENDAR VARIABLES ---
+        let globalTasks = [];
+        let navCurrentDate = new Date();
+
+        // THEME LOGIC
+        function toggleTheme() {
+            const body = document.body;
+            const btn = document.getElementById('themeBtn');
+            if (body.getAttribute('data-theme') === 'dark') {
+                body.removeAttribute('data-theme');
+                btn.innerText = '🌙 Dark Mode';
+            } else {
+                body.setAttribute('data-theme', 'dark');
+                btn.innerText = '☀️ Light Mode';
+            }
+        }
+
+        // --- WIKIPEDIA API LOGIC ---
+        async function searchWiki() {
+            const query = document.getElementById('wikiInput').value;
+            if(!query) return;
+            const resDiv = document.getElementById('wikiResult');
+            resDiv.style.display = 'block';
+            resDiv.innerText = 'Searching...';
+            try {
+                const response = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`);
+                const data = await response.json();
+                if(data.type === 'standard') {
+                    resDiv.innerHTML = `<strong>${data.title}</strong>: ${data.extract} <br><a href="${data.content_urls.desktop.page}" target="_blank" style="color:#0984e3; font-weight:bold; display:inline-block; margin-top:8px;">Read full article ➡️</a>`;
+                } else {
+                    resDiv.innerText = 'No summary found. Try a different search term.';
+                }
+            } catch (e) {
+                resDiv.innerText = 'Error fetching study data.';
+            }
+        }
+
+        // --- CALENDAR & NAVIGATION LOGIC ---
+        function switchTab(tab) {
+            document.getElementById('navDashboard').classList.toggle('active', tab === 'dashboard');
+            document.getElementById('navCalendar').classList.toggle('active', tab === 'calendar');
+            
+            const isDash = tab === 'dashboard';
+            document.getElementById('taskCreatorSection').style.display = isDash ? 'flex' : 'none';
+            document.getElementById('wikiSection').style.display = isDash ? 'flex' : 'none';
+            document.getElementById('tasksContainer').style.display = isDash ? 'block' : 'none';
+            
+            if(isDash && globalTasks.length === 0) {
+                document.getElementById('emptyState').style.display = 'block';
+                document.getElementById('tasksContainer').style.display = 'none';
+            } else {
+                document.getElementById('emptyState').style.display = 'none';
+            }
+            
+            document.getElementById('calendarContainer').style.display = tab === 'calendar' ? 'block' : 'none';
+            if(tab === 'calendar') renderCalendar();
+        }
+
+        function changeMonth(direction) {
+            navCurrentDate.setMonth(navCurrentDate.getMonth() + direction);
+            renderCalendar();
+        }
+
+        function renderCalendar() {
+            const year = navCurrentDate.getFullYear();
+            const month = navCurrentDate.getMonth();
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            document.getElementById('calendarMonthLabel').innerText = `${monthNames[month]} ${year}`;
+            
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = ''; 
+            
+            const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            dayNames.forEach(d => {
+                const div = document.createElement('div');
+                div.className = 'calendar-day-name';
+                div.innerText = d;
+                grid.appendChild(div);
+            });
+            
+            for(let i = 0; i < firstDay; i++) {
+                const div = document.createElement('div');
+                div.className = 'calendar-day empty';
+                grid.appendChild(div);
+            }
+            
+            const today = new Date();
+            for(let i = 1; i <= daysInMonth; i++) {
+                const div = document.createElement('div');
+                div.className = 'calendar-day';
+                if (year === today.getFullYear() && month === today.getMonth() && i === today.getDate()) div.classList.add('today');
+                div.innerHTML = `<div class="calendar-date">${i}</div>`;
+                
+                const dayString = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+                const dayTasks = globalTasks.filter(t => t.dueDate === dayString);
+                
+                dayTasks.forEach(t => {
+                    const taskDiv = document.createElement('div');
+                    taskDiv.className = `cal-task ${t.isUrgent ? 'urgent' : ''} ${t.isCompleted ? 'completed' : ''}`;
+                    taskDiv.innerText = t.title;
+                    taskDiv.title = `Assigned to: ${t.assignedTo || 'Unassigned'}`; 
+                    div.appendChild(taskDiv);
+                });
+                grid.appendChild(div);
+            }
+        }
+
+        // POMODORO
+        let timeLeft = 1500; let timer;
+        function updateDisplay() { const m = Math.floor(timeLeft/60); const s = timeLeft%60; document.getElementById('timeDisplay').innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`; }
+        function startTimer() { timer = setInterval(() => { if(timeLeft > 0){ timeLeft--; updateDisplay(); } }, 1000); }
+        function pauseTimer() { clearInterval(timer); }
+        function setMode(m) { pauseTimer(); timeLeft = m*60; updateDisplay(); }
+
+        // GOOGLE AUTH
+        function handleCredentialResponse(response) {
+            const p = JSON.parse(atob(response.credential.split('.')[1]));
+            currentUser = p.given_name; currentUserPic = p.picture;
+            document.getElementById('user-info').innerHTML = `
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <img src="${p.picture}" class="user-avatar-top"> 
+                    <div>
+                        <div style="font-size:12px; color:var(--text-muted);">Welcome back,</div>
+                        <div style="font-size:16px; color:var(--text-main); font-weight: 800;">${p.given_name}</div>
+                    </div>
+                </div>
+            `;
+        }
+        window.onload = () => {
+            google.accounts.id.initialize({ client_id: "771770961619-frmp5vs5hfnn7npkug8g1gcqfsau2og4.apps.googleusercontent.com", callback: handleCredentialResponse });
+            google.accounts.id.renderButton(document.getElementById("buttonDiv"), { theme: "outline", size: "large" });
+            document.getElementById('dueDateInput').value = new Date().toISOString().split('T')[0];
+            loadTasks(); updateDisplay();
+        };
+
+        // CHAT LOGIC
+        function sendChatMessage() {
+            const text = document.getElementById('chatInput').value;
+            if(!text) return;
+            socket.emit('sendMessage', { user: currentUser, text: text, pic: currentUserPic });
+            document.getElementById('chatInput').value = '';
+        }
+        socket.on('receiveMessage', (data) => {
+            const div = document.createElement('div');
+            div.className = `chat-msg ${data.user === currentUser ? 'mine' : ''}`;
+            div.innerHTML = `<div class="chat-user">${data.user}</div>${data.text}`;
+            document.getElementById('chatMessages').appendChild(div);
+            document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
+        });
+        socket.on('loadChat', (messages) => {
+            document.getElementById('chatMessages').innerHTML = ''; 
+            messages.forEach(msg => {
+                const div = document.createElement('div');
+                div.className = `chat-msg ${msg.user === currentUser ? 'mine' : ''}`;
+                div.innerHTML = `<div class="chat-user">${msg.user}</div>${msg.text}`;
+                document.getElementById('chatMessages').appendChild(div);
+            });
+            document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
+        });
+
+        // TASK LOGIC
+        socket.on('taskUpdated', () => loadTasks());
+        
+        function createTaskHTML(t) {
+            let linkHTML = '';
+            if (t.resourceUrl) {
+                const fullUrl = t.resourceUrl.startsWith('http') ? t.resourceUrl : 'https://' + t.resourceUrl;
+                linkHTML = `<a href="${fullUrl}" target="_blank" class="badge" style="background:#fdcb6e; color:#2d3436; text-decoration:none;">🔗 Resource</a>`;
+            }
+
+            return `
+                <div style="flex:1">
+                    <div class="row" style="margin-bottom:5px;">
+                        <input type="checkbox" ${t.isCompleted ? 'checked' : ''} onchange="toggleTask('${t._id}')" style="transform: scale(1.3); cursor:pointer;">
+                        <span class="task-title">${t.title}</span>
+                        <div class="author-box">
+                            <img src="${t.creatorPic || 'https://via.placeholder.com/24'}" class="task-avatar">
+                            ${t.createdBy}
+                        </div>
+                    </div>
+                    <div class="badges">
+                        <span class="badge" style="background:${t.isUrgent ? '#ff7675':'#b2bec3'}">${t.isUrgent ? '🔴 Urgent':'⚪ Routine'}</span>
+                        <span class="badge" style="background:var(--text-muted)">${t.taskSize}</span>
+                        ${t.dueDate ? `<span class="badge" style="background:#a29bfe">📅 ${t.dueDate}</span>` : ''}
+                        ${t.assignedTo && t.assignedTo !== 'Unassigned' ? `<span class="badge" style="background:#00cec9">👤 ${t.assignedTo}</span>` : ''}
+                        ${linkHTML}
+                    </div>
+                </div>
+                <button style="border:none; background:none; cursor:pointer; font-size:20px; padding:10px;" onclick="deleteTask('${t._id}')">🗑️</button>
+            `;
+        }
+
+        async function loadTasks() {
+            const res = await fetch(API_URL); 
+            const tasks = await res.json();
+            
+            globalTasks = tasks;
+            
+            // --- UPDATE FOCUS DROPDOWN ---
+            const focusSelect = document.getElementById('focusTaskSelector');
+            const currentFocus = focusSelect.value;
+            focusSelect.innerHTML = '<option value="">What are you working on?</option>';
+            
+            tasks.filter(t => !t.isCompleted).forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t._id;
+                opt.innerText = t.title;
+                focusSelect.appendChild(opt);
+            });
+            focusSelect.value = currentFocus; 
+            // ----------------------------------
+
+            const done = tasks.filter(t => t.isCompleted).length;
+            const per = tasks.length ? Math.round((done/tasks.length)*100) : 0;
+            document.getElementById('progressFill').style.width = per + '%';
+            document.getElementById('progressText').innerText = per + '%';
+
+            const listToday = document.getElementById('listToday'); listToday.innerHTML = '';
+            const listUpcoming = document.getElementById('listUpcoming'); listUpcoming.innerHTML = '';
+            const listCompleted = document.getElementById('listCompleted'); listCompleted.innerHTML = '';
+
+            const isDashboardOpen = document.getElementById('navDashboard').classList.contains('active');
+
+            if (tasks.length === 0) {
+                if (isDashboardOpen) {
+                    document.getElementById('emptyState').style.display = 'block';
+                    document.getElementById('tasksContainer').style.display = 'none';
+                }
+                if (document.getElementById('calendarContainer').style.display === 'block') renderCalendar();
+                return;
+            } else {
+                document.getElementById('emptyState').style.display = 'none';
+                if (isDashboardOpen) document.getElementById('tasksContainer').style.display = 'block';
+            }
+
+            const todayStr = new Date().toISOString().split('T')[0];
+
+            tasks.sort((a,b) => {
+                if (a.isCompleted !== b.isCompleted) return a.isCompleted ? 1 : -1;
+                if (a.dueDate && b.dueDate) return new Date(a.dueDate) - new Date(b.dueDate);
+                return 0;
+            });
+
+            tasks.forEach(t => {
+                const li = document.createElement('li'); 
+                li.innerHTML = createTaskHTML(t);
+
+                if (t.isCompleted) {
+                    listCompleted.appendChild(li);
+                } else if (!t.dueDate || t.dueDate <= todayStr) {
+                    listToday.appendChild(li);
+                } else {
+                    listUpcoming.appendChild(li);
+                }
+            });
+
+            document.getElementById('titleToday').style.display = listToday.children.length ? 'block' : 'none';
+            document.getElementById('titleUpcoming').style.display = listUpcoming.children.length ? 'block' : 'none';
+            document.getElementById('titleCompleted').style.display = listCompleted.children.length ? 'block' : 'none';
+
+            if (document.getElementById('calendarContainer').style.display === 'block') {
+                renderCalendar(); 
+            }
+        }
+
+        async function saveTask() {
+            const title = document.getElementById('taskInput').value;
+            if(!title) return;
+            await fetch(API_URL, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({
+                title, isUrgent: document.getElementById('urgentCheck').checked, isImportant: document.getElementById('importantCheck').checked,
+                taskSize: document.getElementById('sizeSelect').value, createdBy: currentUser, creatorPic: currentUserPic,
+                dueDate: document.getElementById('dueDateInput').value, assignedTo: document.getElementById('assignInput').value,
+                resourceUrl: document.getElementById('resourceInput').value
+            })});
+            document.getElementById('taskInput').value = '';
+            document.getElementById('resourceInput').value = ''; 
+            document.getElementById('dueDateInput').value = new Date().toISOString().split('T')[0];
+            document.getElementById('assignInput').value = '';
+        }
+        async function toggleTask(id) { await fetch(`${API_URL}/${id}`, { method: 'PUT' }); }
+        async function deleteTask(id) { await fetch(`${API_URL}/${id}`, { method: 'DELETE' }); }
+    </script>
+</body>
+</html>
