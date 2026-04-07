@@ -5,31 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="referrer" content="no-referrer">
     <title>StudyHive | Pro Planner</title>
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="/socket.io/socket.io.js"></script>
     <style>
         /* --- CSS VARIABLES --- */
         :root {
-            --bg-main: #f0f4f8;
-            --bg-panel: #ffffff;
-            --text-main: #2c3e50;
-            --text-muted: #636e72;
-            --border-color: #e2e8f0;
-            --accent-color: #00b894;
-            --hover-bg: #e8f8f5;
-            --input-bg: #ffffff;
+            --bg-main: #F8FAFC;
+            --bg-panel: #FFFFFF;
+            --text-main: #1E293B;
+            --text-muted: #64748B;
+            --border-color: #E2E8F0;
+            --accent-color: #10B981;
+            --hover-bg: #F1F5F9;
+            --input-bg: #FFFFFF;
             --shadow: rgba(0,0,0,0.05);
         }
 
         [data-theme="dark"] {
-            --bg-main: #0f172a;
-            --bg-panel: #1e293b;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --border-color: #334155;
-            --accent-color: #10b981;
-            --hover-bg: #064e3b;
-            --input-bg: #0f172a;
+            --bg-main: #0B1120;
+            --bg-panel: #1E293B;
+            --text-main: #F8FAFC;
+            --text-muted: #94A3B8;
+            --border-color: rgba(255,255,255,0.1);
+            --accent-color: #10B981;
+            --hover-bg: #0F172A;
+            --input-bg: #0B1120;
             --shadow: rgba(0,0,0,0.3);
         }
 
@@ -38,43 +37,43 @@
         body { margin: 0; padding: 0; display: flex; height: 100vh; overflow: hidden; background-color: var(--bg-main); font-family: 'Segoe UI', sans-serif; color: var(--text-main); }
         
         /* --- 1. LEFT SIDEBAR --- */
-        .sidebar { width: 260px; background: var(--bg-panel); border-right: 1px solid var(--border-color); padding: 25px 20px; display: flex; flex-direction: column; gap: 20px; z-index: 10; overflow-y: auto; }
+        .sidebar { width: 260px; background: var(--bg-panel); border-right: 1px solid var(--border-color); padding: 25px 20px; display: flex; flex-direction: column; gap: 20px; z-index: 100; position: relative; overflow-y: auto; box-shadow: 0 8px 24px var(--shadow); }
         .brand { font-size: 24px; font-weight: bold; color: var(--accent-color); display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
-        #user-info { display: flex; flex-direction: column; gap: 10px; font-weight: bold; font-size: 14px; background: var(--bg-main); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); }
+        #user-info { display: flex; flex-direction: column; gap: 10px; font-weight: bold; font-size: 14px; background: var(--bg-main); padding: 15px; border-radius: 16px; border: 1px solid var(--border-color); }
         .user-avatar-top { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--accent-color); }
         
         .nav-menu { display: flex; flex-direction: column; gap: 4px; }
         .nav-category { font-size: 11px; color: var(--text-muted); font-weight: 700; margin: 15px 0 5px 10px; letter-spacing: 1px; text-transform: uppercase; }
-        .nav-item { padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: 600; color: var(--text-muted); transition: 0.2s; display: flex; align-items: center; gap: 10px; font-size: 14px; }
+        .nav-item { padding: 10px 15px; border-radius: 12px; cursor: pointer; font-weight: 600; color: var(--text-muted); transition: 0.2s; display: flex; align-items: center; gap: 10px; font-size: 14px; }
         .nav-item:hover, .nav-item.active { background: var(--hover-bg); color: var(--accent-color); }
         
         .sidebar-bottom { margin-top: auto; }
-        .progress-dashboard { background: var(--bg-main); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); }
+        .progress-dashboard { background: var(--bg-main); padding: 15px; border-radius: 16px; border: 1px solid var(--border-color); }
         .progress-track { width: 100%; height: 8px; background: var(--border-color); border-radius: 10px; margin-top: 10px; }
         .progress-fill { height: 100%; background: var(--accent-color); width: 0%; border-radius: 10px;}
 
         /* --- 2. MAIN DASHBOARD --- */
-        .main-dashboard { flex: 1; padding: 30px 40px; overflow-y: auto; display: flex; justify-content: center; }
+        .main-dashboard { flex: 1; padding: 30px 40px; overflow-y: auto; display: flex; justify-content: center; z-index: 1; }
         .dashboard-content { max-width: 800px; width: 100%; display: flex; flex-direction: column; gap: 25px; }
         
         .block-label { font-size: 12px; font-weight: bold; color: var(--text-muted); text-transform: uppercase; margin-bottom: 15px; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; justify-content: center;}
         .block-label-left { justify-content: flex-start; margin-bottom: 12px; }
 
-        .pomodoro-box { background: var(--bg-panel); border-radius: 12px; text-align: center; border: 2px solid var(--border-color); box-shadow: 0 4px 6px var(--shadow); }
+        .pomodoro-box { background: var(--bg-panel); border-radius: 16px; text-align: center; border: 2px solid var(--border-color); box-shadow: 0 8px 24px var(--shadow); }
         .timer-display { font-weight: bold; color: #d63031; font-family: monospace; letter-spacing: 2px; }
         
-        .input-area { display: flex; flex-direction: column; gap: 15px; background: var(--bg-panel); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px var(--shadow); border: 1px solid var(--border-color); }
+        .input-area { display: flex; flex-direction: column; gap: 15px; background: var(--bg-panel); padding: 20px; border-radius: 16px; box-shadow: 0 8px 24px var(--shadow); border: 1px solid var(--border-color); }
         .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-        input, select { padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main); font-family: inherit; }
-        .add-btn { background: var(--accent-color); color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; border: 1px solid transparent; }
+        input, select { padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main); font-family: inherit; }
+        .add-btn { background: var(--accent-color); color: white; border: none; padding: 12px 20px; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; border: 1px solid transparent; }
         .add-btn:hover { filter: brightness(1.1); }
         
         .section-title { font-size: 14px; font-weight: bold; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin: 25px 0 10px 0; border-bottom: 2px solid var(--border-color); padding-bottom: 5px;}
-        .empty-state { text-align: center; padding: 30px; color: var(--text-muted); font-size: 16px; font-weight: 500; background: var(--bg-main); border-radius: 12px; border: 2px dashed var(--border-color); margin-top: 10px; }
+        .empty-state { text-align: center; padding: 30px; color: var(--text-muted); font-size: 16px; font-weight: 500; background: var(--bg-main); border-radius: 16px; border: 2px dashed var(--border-color); margin-top: 10px; }
         
         /* Base Task List Styles */
         ul { list-style: none; padding: 0; margin: 0; }
-        li { padding: 18px; border-radius: 12px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border-color); transition: transform 0.2s, box-shadow 0.2s; }
+        li { padding: 18px; border-radius: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border-color); transition: transform 0.2s, box-shadow 0.2s; }
         
         .badges { display: flex; gap: 6px; font-size: 11px; margin-top: 8px; flex-wrap: wrap; }
         .badge { padding: 4px 8px; border-radius: 12px; color: white; font-weight: bold; }
@@ -100,29 +99,45 @@
         .chat-header { padding: 20px; border-bottom: 1px solid var(--border-color); font-weight: bold; font-size: 16px; background: var(--bg-panel); display: flex; align-items: center; gap: 10px; }
         #chatMessages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; background: var(--bg-main); }
         .chat-input-area { padding: 15px; background: var(--bg-panel); border-top: 1px solid var(--border-color); display: flex; gap: 8px; }
-        .chat-msg { font-size: 14px; padding: 10px 14px; border-radius: 15px; background: var(--bg-panel); border: 1px solid var(--border-color); max-width: 85%; width: fit-content; line-height: 1.4; box-shadow: 0 2px 4px var(--shadow);}
+        .chat-msg { font-size: 14px; padding: 10px 14px; border-radius: 16px; background: var(--bg-panel); border: 1px solid var(--border-color); max-width: 85%; width: fit-content; line-height: 1.4; box-shadow: 0 2px 4px var(--shadow);}
         .chat-msg.mine { align-self: flex-end; background: var(--accent-color); color: white; border: none; }
         .chat-user { font-size: 11px; font-weight: bold; margin-bottom: 4px; opacity: 0.8; }
 
         /* --- 4. CALENDAR UI --- */
-        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin: 10px 0 25px 0; background: var(--bg-panel); padding: 15px 20px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 6px var(--shadow); }
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin: 10px 0 25px 0; background: var(--bg-panel); padding: 15px 20px; border-radius: 16px; border: 1px solid var(--border-color); box-shadow: 0 4px 6px var(--shadow); }
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; }
         .calendar-day-name { text-align: center; font-weight: 800; color: var(--text-muted); font-size: 13px; text-transform: uppercase; margin-bottom: 5px; }
-        .calendar-day { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 8px; min-height: 110px; padding: 10px; display: flex; flex-direction: column; gap: 5px; transition: transform 0.2s; box-shadow: 0 2px 4px var(--shadow); }
+        .calendar-day { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; min-height: 110px; padding: 10px; display: flex; flex-direction: column; gap: 5px; transition: transform 0.2s; box-shadow: 0 2px 4px var(--shadow); }
         .calendar-day:hover { transform: translateY(-2px); box-shadow: 0 6px 12px var(--shadow); }
         .calendar-day.empty { background: transparent; border: none; box-shadow: none; pointer-events: none; }
         .calendar-date { font-weight: 800; font-size: 16px; color: var(--text-muted); margin-bottom: 5px; align-self: flex-end; }
         .calendar-day.today { border: 2px solid var(--accent-color); background: var(--hover-bg); }
         .calendar-day.today .calendar-date { color: var(--accent-color); }
-        .cal-task { font-size: 11px; font-weight: 600; padding: 5px 8px; border-radius: 6px; background: var(--bg-main); color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-left: 3px solid var(--border-color); }
+        .cal-task { font-size: 11px; font-weight: 600; padding: 5px 8px; border-radius: 8px; background: var(--bg-main); color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-left: 3px solid var(--border-color); }
         .cal-task.urgent { border-left-color: #ff7675; }
         .cal-task.completed { text-decoration: line-through; opacity: 0.5; filter: grayscale(100%); }
+
+        /* --- DASHBOARD AT-A-GLANCE --- */
+        .dashboard-summary-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+        }
+        .dash-stat-card {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 14px 16px;
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+        .dash-stat-value { font-size: 22px; font-weight: 800; color: var(--accent-color); line-height: 1.2; }
+        .dash-stat-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 4px; }
     </style>
 </head>
 <body>
 
     <div class="sidebar">
-        <div class="brand">🐝 StudyHive</div>
+        <div class="brand" onclick="switchTab('dashboard')" style="cursor:pointer;" title="Back to My Dashboard">🐝 StudyHive</div>
         <div id="user-info">
             <span style="color:var(--text-muted); font-weight:normal;">Account</span>
             <div id="buttonDiv"></div>
@@ -140,11 +155,11 @@
             
             <div class="nav-category">Tools</div>
             <div class="nav-item" id="navCalendar" onclick="switchTab('calendar')">📅 Calendar</div>
-            <div class="nav-item">📈 Analytics</div>
+            <div class="nav-item" id="navAnalytics" onclick="switchTab('analytics')">📈 Analytics</div>
             
             <div class="nav-category">System</div>
             <div class="nav-item" onclick="toggleTheme()" id="themeBtn">🌙 Dark Mode</div>
-            <div class="nav-item">⚙️ Settings</div>
+            <div class="nav-item" id="navSettings" onclick="switchTab('settings')">⚙️ Settings</div>
         </div>
 
         <!-- NEW: SIDEBAR POMODORO -->
@@ -174,17 +189,38 @@
                 </div>
                 <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
             </div>
+            <button class="nav-item" style="margin-top: 20px; background: var(--bg-main); color: var(--text-muted); border: 1px solid var(--border-color);" onclick="logout()">🚪 Log Out</button>
         </div>
     </div>
 
     <div class="main-dashboard">
         <div class="dashboard-content">
 
+            <!-- My Dashboard: quick stats (same task list logic, read-only snapshot) -->
+            <div id="dashboardSummaryRow" class="dashboard-summary-row">
+                <div class="dash-stat-card">
+                    <div class="dash-stat-value" id="dashStatActive">0</div>
+                    <div class="dash-stat-label">Active tasks</div>
+                </div>
+                <div class="dash-stat-card">
+                    <div class="dash-stat-value" id="dashStatToday">0</div>
+                    <div class="dash-stat-label">Today & overdue</div>
+                </div>
+                <div class="dash-stat-card">
+                    <div class="dash-stat-value" id="dashStatUpcoming">0</div>
+                    <div class="dash-stat-label">Upcoming</div>
+                </div>
+                <div class="dash-stat-card">
+                    <div class="dash-stat-value" id="dashStatDone">0</div>
+                    <div class="dash-stat-label">Completed</div>
+                </div>
+            </div>
+
             <!-- Wikipedia Quick Search API Integration -->
             <div class="input-area" id="wikiSection">
                 <div class="block-label block-label-left" style="color:#0984e3;">📚 Quick Study Lookup (Wiki API)</div>
                 <div class="row">
-                    <input type="text" id="wikiInput" placeholder="Search a topic..." style="flex:1">
+                    <input type="text" id="wikiInput" placeholder="Search a topic..." style="flex:1" onkeydown="if(event.key==='Enter'){event.preventDefault();searchWiki();}">
                     <button class="add-btn" style="background:#0984e3;" onclick="searchWiki()">Search</button>
                 </div>
                 <div id="wikiResult" style="margin-top:10px; font-size:14px; color:var(--text-main); display:none; padding:15px; background:var(--bg-main); border-radius:8px; border:1px solid var(--border-color);"></div>
@@ -192,7 +228,7 @@
 
             <div class="input-area" id="taskCreatorSection">
                 <div class="block-label block-label-left">📝 Plan Your Next Task</div>
-                <input type="text" id="taskInput" placeholder="What is the next goal?" style="width: 100%; font-size: 16px;">
+                <input type="text" id="taskInput" placeholder="What is the next goal?" style="width: 100%; font-size: 16px;" onkeydown="if(event.key==='Enter'){event.preventDefault();saveTask();}">
                 
                 <!-- Resource URL Input -->
                 <input type="text" id="resourceInput" placeholder="🔗 Paste resource link (YouTube, PDF, Drive...)" style="width: 100%; font-size: 14px; margin-top:-5px;">
@@ -206,6 +242,9 @@
                         <option value="Pebble">🪨 Pebble</option>
                         <option value="Big Rock">🏔️ Big Rock</option>
                     </select>
+                    <select id="groupSelect" style="font-weight:bold;">
+                        <option value="">Personal</option>
+                    </select>
                 </div>
                 <button class="add-btn" onclick="saveTask()" style="width: 100%; font-size: 16px;">Add to Board</button>
             </div>
@@ -214,6 +253,10 @@
 
             
             <div id="tasksContainer">
+                <div id="viewToggle" style="display: flex; gap: 10px; margin-bottom: 20px;">
+                    <button id="personalViewBtn" class="add-btn view-btn active" onclick="setView('personal')" style="background: var(--accent-color); color: white; padding: 8px 16px; font-size: 13px;">📝 Personal Tasks</button>
+                    <button id="teamViewBtn" class="add-btn view-btn" onclick="setView('team')" style="background: var(--bg-main); color: var(--text-main); border: 1px solid var(--border-color); padding: 8px 16px; font-size: 13px;">👥 Team Tasks</button>
+                </div>
                 <div id="taskFilters" style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid var(--border-color); padding-bottom: 15px;">
                     <button class="add-btn filter-btn" onclick="setFilter('all', this)" style="background: var(--accent-color); color: white; padding: 8px 16px; font-size: 13px;">🌍 All Tasks</button>
                     <button class="add-btn filter-btn" onclick="setFilter('mine', this)" style="background: var(--bg-main); color: var(--text-main); border: 1px solid var(--border-color); padding: 8px 16px; font-size: 13px;">🙋‍♂️ My Tasks</button>
@@ -250,6 +293,12 @@
                         <div style="font-size: 12px; color: var(--text-muted); font-weight: bold; text-transform: uppercase; margin-top: 5px;">Active Tasks</div>
                     </div>
                 </div>
+                <button class="add-btn" id="generateQuizBtn" onclick="generateTeamQuiz()">Generate Team Pulse Quiz</button>
+                <div id="quizContainer" style="display: none; margin-top: 15px; padding: 20px; background: var(--bg-panel); border-radius: 16px; border: 1px solid var(--border-color);"></div>
+                <div class="section-title" style="margin-top: 28px;">Contributors from your tasks</div>
+                <p style="font-size: 13px; color: var(--text-muted); margin: -8px 0 12px 0;">People who created tasks in the lists you can see (same data as your loaded tasks).</p>
+                <div id="noMembersState" class="empty-state" style="display: none;">No contributors yet. Add tasks to see your team here.</div>
+                <div id="membersGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px;"></div>
             </div>
 <div id="teamMessagesContainer" style="display: none; width: 100%; height: 80vh; flex-direction: column;">
     <div class="section-title">💬 Team Messages</div>
@@ -261,10 +310,12 @@
 </div>
             
            <div id="teamMembersContainer" style="display: none; width: 100%;">
-                <div class="section-title">👥 Team Members</div>
-                <div id="membersGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; margin-top: 15px;">
-                    </div>
-                <div id="noMembersState" class="empty-state" style="display: none;">No team members found yet.</div>
+                <div class="section-title">👥 Study Groups</div>                <button class="add-btn" onclick="toggleCreateGroupBox()" style="width: 100%; font-size: 16px; margin-bottom: 20px;">+ Create New Group</button>
+                <div id="createGroupBox" style="display: none; margin-bottom: 20px;">
+                    <input type="text" id="newGroupName" placeholder="Enter group name..." style="width: 100%; font-size: 16px; margin-bottom: 10px;">
+                    <button class="add-btn" onclick="createGroupFromUI()" style="width: 100%; font-size: 16px;">Create Group</button>
+                </div>                <div id="groupsList"></div>
+                <div id="noGroupsState" class="empty-state" style="display: none;">No study groups yet. Create your first group!</div>
             </div>
             <div id="calendarContainer" style="display: none; width: 100%;">
                 <div class="calendar-header">
@@ -275,93 +326,68 @@
                 <div class="calendar-grid" id="calendarGrid"></div>
             </div>
 
+            <div id="settingsContainer" style="display: none; width: 100%;">
+                <div class="section-title">⚙️ Settings</div>
+                <div class="input-area">
+                    <div class="block-label block-label-left">Appearance</div>
+                    <p style="font-size: 14px; color: var(--text-muted); margin: 0 0 8px 0;">Switch between light and dark theme (same as the sidebar toggle).</p>
+                    <button type="button" class="add-btn" onclick="toggleTheme()">Toggle theme</button>
+                    <div class="block-label block-label-left" style="margin-top: 20px;">Account</div>
+                    <p style="font-size: 14px; color: var(--text-main); margin: 0;">Signed in as <strong id="settingsDisplayName">—</strong></p>
+                    <p style="font-size: 13px; color: var(--text-muted); margin: 8px 0 0 0;">Username: <span id="settingsUsername" style="font-weight: 700; color: var(--accent-color);">—</span></p>
+                    <div class="block-label block-label-left" style="margin-top: 20px;">Notifications</div>
+                    <p style="font-size: 13px; color: var(--text-muted); margin: 0;">Pomodoro uses browser notifications when you allow them. If you dismissed the prompt, check your browser site settings for this app.</p>
+                </div>
+            </div>
+
         </div>
     </div>
 
    
     <script>
-        const API_URL = 'http://localhost:5000/api/tasks';
-        const socket = io();
         let currentUser = "Anonymous";
         let currentUserPic = "";
+        let currentUserUsername = "";
+
+        try {
+            const storedUser = localStorage.getItem('studyhive_user');
+            if (!storedUser) {
+                window.location.replace('index.html');
+            } else {
+                const parsedData = JSON.parse(storedUser);
+                currentUser = parsedData.name;
+                currentUserPic = parsedData.pic;
+                currentUserUsername = parsedData.username;
+            }
+        } catch (error) {
+            console.error("Auth parsing error:", error);
+            window.location.replace('index.html');
+        }
+
+        const API_URL = '/api/tasks'; // Relative path—works on any domain
+        const socket = io('/');
+        let currentView = 'personal';
+        let userGroups = [];
 
         // --- CALENDAR VARIABLES ---
         let globalTasks = [];
         let navCurrentDate = new Date();
 
-
         // --- FILTER VARIABLES & LOGIC ---
         let currentTaskFilter = 'all';
+        let currentTaskId = null;
 
-        function setFilter(filter, btnElement) {
-            currentTaskFilter = filter;
-            
-            // Reset all buttons to unselected state
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.style.background = 'var(--bg-main)';
-                btn.style.color = 'var(--text-main)';
-                btn.style.border = '1px solid var(--border-color)';
-            });
-            
-            // Highlight the clicked button
-            btnElement.style.background = 'var(--accent-color)';
-            btnElement.style.color = 'white';
-            btnElement.style.border = '1px solid transparent';
-            
-            // Reload the tasks to apply the filter!
-            loadTasks(); 
-        }
-// --- TEAM MEMBERS LOGIC ---
-        function renderTeamMembers() {
-            const membersGrid = document.getElementById('membersGrid');
-            membersGrid.innerHTML = '';
-            
-            // Map to store unique users and count their tasks
-            const membersMap = new Map();
+        // POMODORO
+        let timeLeft = 1500; 
+        let timer; 
+        let isTimerRunning = false;
 
-            // Make sure the logged-in user is always in the directory
-            if (currentUser !== "Anonymous") {
-                 membersMap.set(currentUser, { name: currentUser, pic: currentUserPic, taskCount: 0 });
-            }
+        // Ensure logout function exists
+        window.logout = function() {
+            localStorage.removeItem('studyhive_user');
+            window.location.replace('index.html');
+        };
 
-            // Loop through all tasks to find contributors
-            globalTasks.forEach(task => {
-                if (!task.createdBy || task.createdBy === "Anonymous") return; // Skip anonymous tasks
-                
-                if (!membersMap.has(task.createdBy)) {
-                    membersMap.set(task.createdBy, { 
-                        name: task.createdBy, 
-                        pic: task.creatorPic || 'https://via.placeholder.com/60', 
-                        taskCount: 0 
-                    });
-                }
-                membersMap.get(task.createdBy).taskCount++;
-            });
-
-            if (membersMap.size === 0) {
-                document.getElementById('noMembersState').style.display = 'block';
-                return;
-            } else {
-                document.getElementById('noMembersState').style.display = 'none';
-            }
-
-            // Create a card for each unique member
-            membersMap.forEach((member) => {
-                const card = document.createElement('div');
-                card.style.cssText = "background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; align-items: center; gap: 10px; box-shadow: 0 2px 4px var(--shadow); transition: transform 0.2s;";
-                card.onmouseover = () => card.style.transform = "translateY(-5px)";
-                card.onmouseout = () => card.style.transform = "translateY(0)";
-                
-                card.innerHTML = `
-                    <img src="${member.pic}" style="width: 64px; height: 64px; border-radius: 50%; border: 3px solid var(--accent-color); object-fit: cover;">
-                    <div style="font-weight: 800; color: var(--text-main); font-size: 15px; text-align: center;">${member.name}</div>
-                    <div style="font-size: 11px; font-weight: bold; color: var(--text-muted); background: var(--bg-main); padding: 4px 10px; border-radius: 20px;">
-                        📝 ${member.taskCount} Tasks Created
-                    </div>
-                `;
-                membersGrid.appendChild(card);
-            });
-        }
         // THEME LOGIC
         function toggleTheme() {
             const body = document.body;
@@ -397,7 +423,7 @@
 
         // --- CALENDAR & NAVIGATION LOGIC ---
         
-           function switchTab(tab) {
+        function switchTab(tab) {
             // 1. Update Active State in Sidebar
             document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
             
@@ -408,7 +434,9 @@
                 'teamOverview': 'navTeamOverview',
                 'teamBoard': 'navTeamBoard',
                 'teamMessages': 'navTeamMessages',
-                'teamMembers': 'navTeamMembers'
+                'teamMembers': 'navTeamMembers',
+                'analytics': 'navAnalytics',
+                'settings': 'navSettings'
             };
             if(navIdMap[tab]) {
                 document.getElementById(navIdMap[tab]).classList.add('active');
@@ -417,16 +445,20 @@
             // 2. Hide all main containers first
             const containers = [
                 'taskCreatorSection', 'wikiSection', 'tasksContainer', 'emptyState', 
-                'calendarContainer', 'teamOverviewContainer', 'teamMessagesContainer', 'teamMembersContainer'
+                'calendarContainer', 'teamOverviewContainer', 'teamMessagesContainer', 'teamMembersContainer',
+                'settingsContainer'
             ];
             containers.forEach(id => {
                 if(document.getElementById(id)) {
                     document.getElementById(id).style.display = 'none';
                 }
             });
+            const dashSum = document.getElementById('dashboardSummaryRow');
+            if (dashSum) dashSum.style.display = 'none';
 
             // 3. Show the correct containers based on the clicked tab
             if (tab === 'dashboard') {
+                if (dashSum) dashSum.style.display = 'grid';
                 document.getElementById('taskCreatorSection').style.display = 'flex';
                 document.getElementById('wikiSection').style.display = 'flex';
                 if(globalTasks.length === 0) {
@@ -442,6 +474,19 @@
             else if (tab === 'teamOverview') {
                 document.getElementById('teamOverviewContainer').style.display = 'block';
             }
+            else if (tab === 'analytics') {
+                document.getElementById('teamOverviewContainer').style.display = 'block';
+            }
+            else if (tab === 'settings') {
+                const sc = document.getElementById('settingsContainer');
+                if (sc) {
+                    sc.style.display = 'block';
+                    const n = document.getElementById('settingsDisplayName');
+                    const u = document.getElementById('settingsUsername');
+                    if (n) n.textContent = currentUser || '—';
+                    if (u) u.textContent = currentUserUsername || '—';
+                }
+            }
             else if (tab === 'teamBoard') {
                 // Team board reuses the task container!
                 document.getElementById('taskCreatorSection').style.display = 'flex';
@@ -456,6 +501,7 @@
             }
             else if (tab === 'teamMembers') {
                 document.getElementById('teamMembersContainer').style.display = 'block';
+                loadGroupsUI();
             }
         }
         function changeMonth(direction) {
@@ -509,32 +555,94 @@
             }
         }
 
-        // POMODORO
-        let timeLeft = 1500; let timer;
-        function updateDisplay() { const m = Math.floor(timeLeft/60); const s = timeLeft%60; document.getElementById('timeDisplay').innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`; }
-        function startTimer() { timer = setInterval(() => { if(timeLeft > 0){ timeLeft--; updateDisplay(); } }, 1000); }
-        function pauseTimer() { clearInterval(timer); }
-        function setMode(m) { pauseTimer(); timeLeft = m*60; updateDisplay(); }
-
-        // GOOGLE AUTH
-        function handleCredentialResponse(response) {
-            const p = JSON.parse(atob(response.credential.split('.')[1]));
-            currentUser = p.given_name; currentUserPic = p.picture;
-            document.getElementById('user-info').innerHTML = `
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <img src="${p.picture}" class="user-avatar-top"> 
-                    <div>
-                        <div style="font-size:12px; color:var(--text-muted);">Welcome back,</div>
-                        <div style="font-size:16px; color:var(--text-main); font-weight: 800;">${p.given_name}</div>
-                    </div>
-                </div>
-            `;
+        // --- UPGRADED POMODORO ---
+        function updateDisplay() { 
+            const m = Math.floor(timeLeft/60); 
+            const s = timeLeft%60; 
+            document.getElementById('timeDisplay').innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`; 
         }
+
+        // Creates a simple "Ding!" sound using code (No files needed!)
+        function playDing() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(880, ctx.currentTime); // A5 note
+                osc.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.4);
+            } catch (e) { console.log("Audio not supported"); }
+        }
+
+        function startTimer() { 
+            if(isTimerRunning) return; // Prevent clicking start multiple times
+            isTimerRunning = true;
+            
+            if ("Notification" in window && Notification.permission === "granted" && timeLeft === 1500) {
+                new Notification("Focus Session Started 🚀", { body: "Time to lock in. We will notify you when it's time for a break!" });
+            }
+
+            timer = setInterval(() => { 
+                if(timeLeft > 0){ 
+                    timeLeft--; 
+                    updateDisplay(); 
+                } else {
+                    // TIME IS UP!
+                    pauseTimer();
+                    playDing();
+                    if ("Notification" in window && Notification.permission === "granted") {
+                        new Notification("Time's Up! ☕", { body: "Great focus! Take a 5-minute break." });
+                    } else {
+                        alert("Time's Up! Great focus, take a break.");
+                    }
+                }
+            }, 1000); 
+        }
+
+        function pauseTimer() { 
+            clearInterval(timer); 
+            isTimerRunning = false;
+        }
+
+        function setMode(m) { 
+            pauseTimer(); 
+            timeLeft = m*60; 
+            updateDisplay(); 
+        }
+
         window.onload = () => {
-            google.accounts.id.initialize({ client_id: "771770961619-frmp5vs5hfnn7npkug8g1gcqfsau2og4.apps.googleusercontent.com", callback: handleCredentialResponse });
-            google.accounts.id.renderButton(document.getElementById("buttonDiv"), { theme: "outline", size: "large" });
+            // Safely render the profile box
+            const userInfoDiv = document.getElementById('user-info');
+            if (userInfoDiv) {
+                userInfoDiv.innerHTML = `
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <img src="${currentUserPic}" class="user-avatar-top" style="width:40px; height:40px; border-radius:50%; border:2px solid var(--accent-color);"> 
+                        <div>
+                            <div style="font-size:12px; color:var(--text-muted);">Welcome back,</div>
+                            <div style="font-size:16px; color:var(--text-main); font-weight: 800;">${currentUser}</div>
+                            <div style="font-size:11px; font-weight: bold; color:var(--accent-color);">@${currentUserUsername}</div>
+                        </div>
+                    </div>
+                    <button onclick="logout()" style="margin-top: 12px; background: #ff7675; color: white; border: none; padding: 6px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; width: 100%;">Log Out</button>
+                `;
+            }
+
+            console.log("App initialized for user:", currentUser);
+
+            // Keep your date input working!
             document.getElementById('dueDateInput').value = new Date().toISOString().split('T')[0];
-            loadTasks(); updateDisplay();
+            
+            // 1. Update the Pomodoro timer display so it doesn't look broken
+            updateDisplay(); 
+
+            // 2. Fetch all the tasks for the logged-in user!
+            if (currentUser !== "Anonymous") {
+                loadTasks();
+            }
+
+            // 3. Ask for browser notification permission for the Pomodoro timer
+            if ("Notification" in window) Notification.requestPermission();
         };
 
         // CHAT LOGIC
@@ -552,7 +660,7 @@
             document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
         });
         socket.on('loadChat', (messages) => {
-            document.getElementById('chatMessages').innerHTML = ''; 
+            document.getElementById('chatMessages').innerHTML = '';
             messages.forEach(msg => {
                 const div = document.createElement('div');
                 div.className = `chat-msg ${msg.user === currentUser ? 'mine' : ''}`;
@@ -562,9 +670,81 @@
             document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
         });
 
+        function taskHasDueDate(t) {
+            const d = t && t.dueDate;
+            return d != null && String(d).trim() !== '';
+        }
+
+        function updateDashboardSummary(taskList) {
+            const todayStr = new Date().toISOString().split('T')[0];
+            let active = 0, todayBucket = 0, upcoming = 0, done = 0;
+            (taskList || []).forEach(t => {
+                if (t.isCompleted) {
+                    done++;
+                    return;
+                }
+                active++;
+                // Only tasks with a real due date can be "today or overdue"; undated actives go to Upcoming.
+                if (taskHasDueDate(t) && t.dueDate <= todayStr) todayBucket++;
+                else upcoming++;
+            });
+            const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = String(val); };
+            set('dashStatActive', active);
+            set('dashStatToday', todayBucket);
+            set('dashStatUpcoming', upcoming);
+            set('dashStatDone', done);
+        }
+
+        function strNorm(s) {
+            return String(s || '').trim().toLowerCase();
+        }
+
+        function isCurrentUserAssignee(t) {
+            const a = strNorm(t.assignedTo);
+            if (!a || a === 'unassigned') return false;
+            return a === strNorm(currentUserUsername) || a === strNorm(currentUser);
+        }
+
+        function canUserSubmitProof(t) {
+            const a = strNorm(t.assignedTo);
+            if (!a || a === 'unassigned') return true;
+            return isCurrentUserAssignee(t);
+        }
+
+        function canUserApproveTask(t) {
+            if (!t.proofSubmitted || t.proofStatus !== 'pending') return false;
+            if (isCurrentUserAssignee(t)) return false;
+            if (t.completedBy && t.completedBy === currentUserUsername) return false;
+            if (t.ownerId === currentUserUsername) return true;
+            if (t.groupId) {
+                const g = userGroups.find(x => x.groupId === t.groupId);
+                if (g && (g.admin === currentUserUsername || (g.members && g.members.includes(currentUserUsername)))) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         // TASK LOGIC
-        socket.on('taskUpdated', () => loadTasks());
-        
+        socket.on('taskUpdated', () => { loadTasks(); });
+
+        socket.on('taskProofSubmitted', (task) => {
+            if (task.completedBy !== currentUserUsername && canUserApproveTask(task)) {
+                alert(`${task.completedBy} submitted proof for task: ${task.title}`);
+            }
+            loadTasks();
+        });
+
+        socket.on('taskApproved', (task) => {
+            alert(`Task approved: ${task.title}`);
+            loadTasks();
+        });
+
+        socket.on('memberAdded', (data) => {
+            alert(`New member added to group: ${data.username}`);
+            loadGroupsUI();
+        });
+
         function createTaskHTML(t) {
             let linkHTML = '';
             if (t.resourceUrl) {
@@ -572,11 +752,39 @@
                 linkHTML = `<a href="${fullUrl}" target="_blank" class="badge" style="background:#fdcb6e; color:#2d3436; text-decoration:none;">🔗 Resource</a>`;
             }
 
+            let proofHTML = "";
+            if (t.isCompleted && (t.approvedBy || t.completedBy)) {
+                const when = t.approvedAt
+                    ? new Date(t.approvedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+                    : (t.completedAt ? new Date(t.completedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '');
+                const whoLabel = t.approvedBy ? 'Approved by' : 'Completed by';
+                const whoName = t.approvedBy || t.completedBy;
+                const proofFrom = (t.approvedBy && t.completedBy && t.completedBy !== t.approvedBy)
+                    ? `<span style="margin-left:6px; opacity:.85;">· Proof from <strong>${t.completedBy}</strong></span>`
+                    : '';
+                proofHTML = `
+                    <div style="font-size: 11px; color: #6B7280; margin-top: 8px; display: flex; align-items: center; flex-wrap: wrap; gap: 4px; background: rgba(0,0,0,0.05); padding: 4px 8px; border-radius: 6px; width: fit-content; border: 1px dashed #ccc;">
+                        <span>✅ ${whoLabel}</span>
+                        <strong style="color: var(--text-main);">${whoName}</strong>
+                        ${when ? `<span>at ${when}</span>` : ''}
+                        ${proofFrom}
+                    </div>`;
+            }
+            if (t.proofText) {
+                proofHTML += `<div style="font-size:12px; color:var(--text-muted); margin-top:5px;">📄 ${t.proofText}</div>`;
+            }
+            if (t.proofFile) {
+                proofHTML += `<div style="font-size:12px; margin-top:6px;"><a href="${t.proofFile}" target="_blank" style="color: var(--accent-color); font-weight: 800; text-decoration: none;">📎 View proof</a></div>`;
+            }
+            let approveButton = "";
+            if (canUserApproveTask(t)) {
+                approveButton = `<button type="button" class="add-btn" onclick="approveTask('${t._id}')" style="margin-top:8px; font-size:13px; padding:8px 14px;">✓ Approve proof</button>`;
+            }
             return `
                 <div style="flex:1">
                     <div class="row" style="margin-bottom:5px;">
-                        <input type="checkbox" ${t.isCompleted ? 'checked' : ''} onchange="toggleTask('${t._id}')" style="transform: scale(1.3); cursor:pointer;">
-                        <span class="task-title">${t.title}</span>
+                        <input type="checkbox" ${t.isCompleted ? 'checked' : ''} onchange="handleTaskCheckboxChange(event, '${t._id}')" style="transform: scale(1.3); cursor:pointer;" title="Complete / submit proof">
+                        <span class="task-title">${t.title}</span>${proofHTML}
                         <div class="author-box">
                             <img src="${t.creatorPic || 'https://via.placeholder.com/24'}" class="task-avatar">
                             ${t.createdBy}
@@ -587,18 +795,51 @@
                         <span class="badge" style="background:var(--text-muted)">${t.taskSize}</span>
                         ${t.dueDate ? `<span class="badge" style="background:#a29bfe">📅 ${t.dueDate}</span>` : ''}
                         ${t.assignedTo && t.assignedTo !== 'Unassigned' ? `<span class="badge" style="background:#00cec9">👤 ${t.assignedTo}</span>` : ''}
+                        ${t.groupId ? `<span class="badge" style="background:#6c5ce7">👥 ${userGroups.find(g => g.groupId === t.groupId)?.groupName || 'Group'}</span>` : ''}
                         ${linkHTML}
                     </div>
+                    ${approveButton}
                 </div>
                 <button style="border:none; background:none; cursor:pointer; font-size:20px; padding:10px;" onclick="deleteTask('${t._id}')">🗑️</button>
             `;
         }
 
         async function loadTasks() {
-            const res = await fetch(API_URL); 
-            const tasks = await res.json();
+            const res = await fetch(`${API_URL}?username=${currentUserUsername}`);
+            const rawTasks = await res.json();
+            const tasks = Array.isArray(rawTasks) ? rawTasks : [];
+            
+            // Fetch user groups
+            const groupsRes = await fetch(`/api/groups/${currentUserUsername}`);
+            const rawGroups = await groupsRes.json();
+            userGroups = Array.isArray(rawGroups) ? rawGroups : [];
             
             globalTasks = tasks;
+
+            updateDashboardSummary(tasks);
+            
+            // Populate group selects
+            const groupSelect = document.getElementById('groupSelect');
+            groupSelect.innerHTML = '<option value="">Personal</option>';
+            // Any group the current user belongs to (admin or member) can be selected
+            // so members of a study group can also share tasks into that group.
+            userGroups.forEach(g => {
+                const opt = document.createElement('option');
+                opt.value = g.groupId;
+                opt.textContent = g.groupName;
+                groupSelect.appendChild(opt);
+            });
+            
+            const addMemberGroup = document.getElementById('addMemberGroup');
+            if (addMemberGroup) {
+                addMemberGroup.innerHTML = '';
+                userGroups.forEach(g => {
+                    const opt = document.createElement('option');
+                    opt.value = g.groupId;
+                    opt.textContent = g.groupName;
+                    addMemberGroup.appendChild(opt);
+                });
+            }
             
             // --- UPDATE FOCUS DROPDOWN ---
             const focusSelect = document.getElementById('focusTaskSelector');
@@ -613,7 +854,6 @@
             });
             focusSelect.value = currentFocus; 
             // ----------------------------------
-
             const done = tasks.filter(t => t.isCompleted).length;
             const per = tasks.length ? Math.round((done/tasks.length)*100) : 0;
             document.getElementById('progressFill').style.width = per + '%';
@@ -647,12 +887,23 @@
             // Apply the active filter before sorting and rendering!
             let tasksToRender = tasks;
             
+            // Apply view filter first
+            if (currentView === 'personal') {
+                tasksToRender = tasksToRender.filter(t => !t.groupId);
+            } else if (currentView === 'team') {
+                tasksToRender = tasksToRender.filter(t => t.groupId && userGroups.some(g => g.groupId === t.groupId));
+            }
+            
             if (currentTaskFilter === 'mine') {
-                // Show tasks created by me OR assigned to me
-                tasksToRender = tasks.filter(t => t.assignedTo === currentUser || t.createdBy === currentUser);
+                // Show tasks created by me OR assigned to me (display name or username)
+                tasksToRender = tasksToRender.filter(t =>
+                    t.assignedTo === currentUser || t.createdBy === currentUser ||
+                    t.assignedTo === currentUserUsername || t.createdBy === currentUserUsername);
             } else if (currentTaskFilter === 'assigned') {
                 // Show tasks assigned to someone else
-                tasksToRender = tasks.filter(t => t.assignedTo !== 'Unassigned' && t.assignedTo !== currentUser && t.assignedTo !== '');
+                tasksToRender = tasksToRender.filter(t =>
+                    t.assignedTo && t.assignedTo !== 'Unassigned' &&
+                    t.assignedTo !== currentUser && t.assignedTo !== currentUserUsername);
             }
 
             tasksToRender.sort((a,b) => {
@@ -667,7 +918,7 @@
 
                 if (t.isCompleted) {
                     listCompleted.appendChild(li);
-                } else if (!t.dueDate || t.dueDate <= todayStr) {
+                } else if (taskHasDueDate(t) && t.dueDate <= todayStr) {
                     listToday.appendChild(li);
                 } else {
                     listUpcoming.appendChild(li);
@@ -690,15 +941,471 @@
                 title, isUrgent: document.getElementById('urgentCheck').checked, isImportant: document.getElementById('importantCheck').checked,
                 taskSize: document.getElementById('sizeSelect').value, createdBy: currentUser, creatorPic: currentUserPic,
                 dueDate: document.getElementById('dueDateInput').value, assignedTo: document.getElementById('assignInput').value,
-                resourceUrl: document.getElementById('resourceInput').value
+                resourceUrl: document.getElementById('resourceInput').value, ownerId: currentUserUsername, groupId: document.getElementById('groupSelect').value || null
             })});
             document.getElementById('taskInput').value = '';
             document.getElementById('resourceInput').value = ''; 
             document.getElementById('dueDateInput').value = new Date().toISOString().split('T')[0];
             document.getElementById('assignInput').value = '';
         }
-        async function toggleTask(id) { await fetch(`${API_URL}/${id}`, { method: 'PUT' }); }
+        async function toggleTask(id) {
+            await fetch(`${API_URL}/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user: currentUser }) 
+            });
+        }
+
+        async function handleTaskCheckboxChange(e, taskId) {
+            const t = globalTasks.find(x => String(x._id) === String(taskId));
+            if (!t) return;
+            const cb = e.target;
+            const wantChecked = cb.checked;
+            cb.checked = !!t.isCompleted;
+
+            if (!t.isCompleted && t.proofSubmitted && t.proofStatus === 'pending') {
+                if (wantChecked) {
+                    alert('Proof is already waiting for approval. A teammate must approve it.');
+                }
+                return;
+            }
+
+            if (!t.isCompleted && wantChecked) {
+                if (!canUserSubmitProof(t)) {
+                    alert('Only the assigned teammate can submit proof for this task. (Unassigned tasks: anyone can submit.)');
+                    return;
+                }
+                openProofPanel(taskId);
+                return;
+            }
+
+            if (t.isCompleted && !wantChecked) {
+                await toggleTask(taskId);
+                await loadTasks();
+            }
+        }
+
+        function openProofPanel(taskId) {
+            currentTaskId = taskId;
+            document.getElementById('proofPanel').style.right = '0';
+        }
+
+        function resetProofForm() {
+            const pt = document.getElementById('proofTextInput');
+            const pf = document.getElementById('proofFileInput');
+            if (pt) pt.value = '';
+            if (pf) pf.value = '';
+        }
+
+        function hideProofPanel() {
+            document.getElementById('proofPanel').style.right = '-400px';
+        }
+
+        function cancelProofPanel() {
+            hideProofPanel();
+            resetProofForm();
+            loadTasks();
+        }
+
+        async function submitProof() {
+            const proofText = document.getElementById('proofTextInput').value;
+            const fileInput = document.getElementById('proofFileInput').files[0];
+
+            if (!proofText) {
+                alert("Proof required");
+                return;
+            }
+
+            if (!fileInput) {
+                alert("Please attach a proof document (PDF/image/doc).");
+                return;
+            }
+
+            const form = new FormData();
+            form.append('proofText', proofText);
+            form.append('completedBy', currentUserUsername);
+            form.append('proofFile', fileInput);
+
+            const res = await fetch(`/api/tasks/${currentTaskId}/proof`, {
+                method: 'PUT',
+                body: form
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                alert(data.error || 'Failed to submit proof');
+                return;
+            }
+
+            hideProofPanel();
+            resetProofForm();
+            loadTasks();
+        }
+
+        async function approveTask(taskId) {
+            const res = await fetch(`/api/tasks/${taskId}/approve`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ approvedBy: currentUserUsername })
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                alert(data.error || 'Approval failed');
+                return;
+            }
+            loadTasks();
+        }
+
         async function deleteTask(id) { await fetch(`${API_URL}/${id}`, { method: 'DELETE' }); }
+
+        function setFilter(filter, btnElement) {
+            currentTaskFilter = filter;
+            
+            // Reset all buttons to unselected state
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.style.background = 'var(--bg-main)';
+                btn.style.color = 'var(--text-main)';
+                btn.style.border = '1px solid var(--border-color)';
+            });
+            
+            // Highlight the clicked button
+            btnElement.style.background = 'var(--accent-color)';
+            btnElement.style.color = 'white';
+            btnElement.style.border = '1px solid transparent';
+            
+            // Reload the tasks to apply the filter!
+            loadTasks(); 
+        }
+
+        function setView(view) {
+            currentView = view;
+            document.getElementById('personalViewBtn').classList.toggle('active', view === 'personal');
+            document.getElementById('teamViewBtn').classList.toggle('active', view === 'team');
+            loadTasks();
+        }
+
+        async function createGroup() {
+            const groupName = document.getElementById('groupNameInput').value.trim();
+            if (!groupName) return alert('Please enter a group name');
+            const res = await fetch('/api/groups', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ groupName, admin: currentUserUsername })
+            });
+            if (res.ok) {
+                document.getElementById('groupNameInput').value = '';
+                loadTasks(); // This will reload groups too
+            } else {
+                alert('Failed to create group');
+            }
+        }
+
+        async function addMemberToGroup() {
+            const groupId = document.getElementById('addMemberGroup').value;
+            const username = document.getElementById('addMemberUsername').value.trim();
+            if (!groupId || !username) return alert('Please select a group and enter a username');
+            try {
+                const res = await fetch(`/api/groups/${groupId}/add`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username })
+                });
+                if (res.ok) {
+                    alert('Successfully added user to the group!');
+                    document.getElementById('addMemberUsername').value = '';
+                    renderTeamMembers(); // Immediately update the UI
+                } else {
+                    const errorData = await res.json();
+                    alert(errorData.error || 'Failed to add member');
+                }
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        function renderTeamMembers() {
+            const membersGrid = document.getElementById('membersGrid');
+            const noMembersState = document.getElementById('noMembersState');
+            if (!membersGrid) return;
+            membersGrid.innerHTML = '';
+            
+            // Map to store unique users and count their tasks
+            const membersMap = new Map();
+            // Make sure the logged-in user is always in the directory
+            if (currentUser !== "Anonymous") {
+                 membersMap.set(currentUser, { name: currentUser, pic: currentUserPic, taskCount: 0 });
+            }
+            // Loop through all tasks to find contributors
+            globalTasks.forEach(task => {
+                if (!task.createdBy || task.createdBy === "Anonymous") return; // Skip anonymous tasks
+                
+                if (!membersMap.has(task.createdBy)) {
+                    membersMap.set(task.createdBy, { 
+                        name: task.createdBy, 
+                        pic: task.creatorPic || 'https://via.placeholder.com/60', 
+                        taskCount: 0 
+                    });
+                }
+                membersMap.get(task.createdBy).taskCount++;
+            });
+
+            if (membersMap.size === 0) {
+                if (noMembersState) noMembersState.style.display = 'block';
+                return;
+            } else {
+                if (noMembersState) noMembersState.style.display = 'none';
+            }
+
+            // Create a card for each unique member
+            membersMap.forEach((member) => {
+                const card = document.createElement('div');
+                card.style.cssText = "background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; align-items: center; gap: 10px; box-shadow: 0 2px 4px var(--shadow); transition: transform 0.2s;";
+                card.onmouseover = () => card.style.transform = "translateY(-5px)";
+                card.onmouseout = () => card.style.transform = "translateY(0)";
+                
+                card.innerHTML = `
+                    <img src="${member.pic}" style="width: 64px; height: 64px; border-radius: 50%; border: 3px solid var(--accent-color); object-fit: cover;">
+                    <div style="font-weight: 800; color: var(--text-main); font-size: 15px; text-align: center;">${member.name}</div>
+                    <div style="font-size: 11px; font-weight: bold; color: var(--text-muted); background: var(--bg-main); padding: 4px 10px; border-radius: 20px;">
+                        📝 ${member.taskCount} Tasks Created
+                    </div>
+                `;
+                membersGrid.appendChild(card);
+            });
+        }
+
+        function toggleCreateGroupBox() {
+            const box = document.getElementById('createGroupBox');
+            box.style.display = box.style.display === 'none' ? 'block' : 'none';
+        }
+
+        async function createGroupFromUI() {
+            const groupName = document.getElementById('newGroupName').value.trim();
+            if (!groupName) return alert('Please enter a group name');
+            try {
+                const res = await fetch('/api/groups', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        groupName: groupName, 
+                        admin: currentUserUsername 
+                    })
+                });
+                if (res.ok) {
+                    document.getElementById('newGroupName').value = '';
+                    document.getElementById('createGroupBox').style.display = 'none';
+                    await loadGroupsUI();
+                } else {
+                    alert('Failed to create group');
+                    document.getElementById('newGroupName').value = '';
+                    return;
+                }
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        async function loadGroupsUI() {
+            try {
+                const res = await fetch(`/api/groups?username=${currentUserUsername}`);
+                let groups = await res.json();
+                groups = groups.filter(group => 
+                    group.admin === currentUserUsername || 
+                    (group.members && group.members.includes(currentUserUsername))
+                );
+                const groupsList = document.getElementById('groupsList');
+                groupsList.innerHTML = '';
+                if (groups.length === 0) {
+                    document.getElementById('noGroupsState').style.display = 'block';
+                    return;
+                } else {
+                    document.getElementById('noGroupsState').style.display = 'none';
+                }
+                groups.forEach(group => {
+                    const groupDiv = document.createElement('div');
+                    groupDiv.style.cssText = "background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 4px var(--shadow);";
+                    groupDiv.innerHTML = `
+                        <div style="font-weight: 800; color: var(--text-main); font-size: 18px; margin-bottom: 10px;">${group.groupName}</div>
+                        <div style="font-size:12px; color:var(--text-muted);">
+                            Created by ${group.admin}
+                        </div>
+                        <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 15px;">Members: ${group.members.join(', ')}</div>
+                        ${group.admin === currentUserUsername ? 
+                        `<button onclick="deleteGroup('${group._id}')" 
+                        style="margin-top:8px; background:#ff4d4f; color:white; border:none; padding:6px 10px; border-radius:6px;">
+                        Delete Group
+                        </button>` 
+                        : ''}
+                        <button class="add-btn" onclick="openAddMemberUI('${group.groupId}')" style="font-size: 14px;">+ Add Member</button>
+                        <div id="addMemberBox-${group.groupId}" style="display: none; margin-top: 10px;">
+                            <input type="text" id="addMemberInput-${group.groupId}" placeholder="Username..." style="width: 100%; font-size: 14px; margin-bottom: 5px;">
+                            <button class="add-btn" onclick="addMemberToGroupDirect('${group.groupId}')" style="width: 100%; font-size: 14px;">Add</button>
+                        </div>
+                    `;
+                    groupsList.appendChild(groupDiv);
+                });
+            } catch (err) {
+                console.error('Error loading groups:', err);
+            }
+        }
+
+        function openAddMemberUI(groupId) {
+            const box = document.getElementById(`addMemberBox-${groupId}`);
+            box.style.display = box.style.display === 'none' ? 'block' : 'none';
+        }
+
+        async function addMemberToGroupDirect(groupId) {
+            const username = document.getElementById(`addMemberInput-${groupId}`).value.trim();
+            if (!username) return alert('Please enter a username');
+            try {
+                const res = await fetch(`/api/groups/${groupId}/add`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username })
+                });
+                if (res.ok) {
+                    alert('Successfully added user to the group!');
+                    document.getElementById(`addMemberInput-${groupId}`).value = '';
+                    document.getElementById(`addMemberBox-${groupId}`).style.display = 'none';
+                    await loadGroupsUI();
+                } else {
+                    const errorData = await res.json();
+                    alert(errorData.error || 'Failed to add member');
+                }
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        async function deleteGroup(groupId) {
+            const confirmDelete = confirm("Are you sure you want to delete this group?");
+            if (!confirmDelete) return;
+
+            const res = await fetch(`/api/groups/${groupId}`, {
+                method: 'DELETE'
+            });
+
+            const data = await res.json().catch(() => ({}));
+
+            if (!res.ok || !data.success) {
+                alert(data.error || "Failed to delete group");
+                return;
+            }
+            await loadGroupsUI();
+            loadTasks();
+        }
+
+        // --- STATELESS: AI Team Pulse Quiz ---
+        let lastGeneratedQuiz = null;
+
+        async function generateTeamQuiz() {
+            try {
+                const completedTeamTitles = (globalTasks || [])
+                    .filter(t => t && t.groupId && t.isCompleted === true)
+                    .map(t => t.title)
+                    .filter(Boolean);
+
+                if (completedTeamTitles.length < 2) {
+                    alert("Not enough completed team tasks to generate a quiz yet!");
+                    return;
+                }
+
+                const quizContainer = document.getElementById('quizContainer');
+                if (!quizContainer) return;
+
+                quizContainer.style.display = 'block';
+                quizContainer.innerHTML = `<div style="font-weight:800; color: var(--text-main);">Generating...</div>`;
+
+                const res = await fetch('/api/generate-quiz', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(completedTeamTitles)
+                });
+
+                const data = await res.json().catch(() => null);
+                if (!res.ok) {
+                    quizContainer.innerHTML = '';
+                    alert((data && data.error) ? data.error : 'Failed to generate quiz');
+                    return;
+                }
+
+                if (!Array.isArray(data)) {
+                    quizContainer.innerHTML = '';
+                    alert('Quiz response was not valid.');
+                    return;
+                }
+
+                lastGeneratedQuiz = data;
+
+                const questionsHtml = data.slice(0, 3).map((q, idx) => {
+                    const opts = Array.isArray(q.options) ? q.options : [];
+                    const safeQ = String(q.question || '');
+                    const optionsHtml = opts.slice(0, 4).map((opt, oIdx) => {
+                        const optText = String(opt);
+                        return `
+                            <label style="display:block; margin:8px 0; padding:10px 12px; border:1px solid var(--border-color); border-radius: 12px; background: var(--bg-main); cursor:pointer;">
+                                <input type="radio" name="quiz_q_${idx}" value="${optText.replace(/"/g, '&quot;')}" style="margin-right:10px;">
+                                <span style="color: var(--text-main); font-weight:600;">${optText}</span>
+                            </label>
+                        `;
+                    }).join('');
+
+                    return `
+                        <div style="margin-bottom: 18px;">
+                            <div style="font-weight: 900; color: var(--text-main); margin-bottom: 10px;">Q${idx + 1}. ${safeQ}</div>
+                            ${optionsHtml}
+                        </div>
+                    `;
+                }).join('');
+
+                quizContainer.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom: 12px;">
+                        <div style="font-weight: 900; color: var(--text-main); font-size: 16px;">AI Team Pulse Quiz</div>
+                        <button type="button" class="add-btn" style="padding:8px 12px; font-size: 13px; background: var(--bg-main); color: var(--text-main); border: 1px solid var(--border-color);" onclick="document.getElementById('quizContainer').style.display='none'">Hide</button>
+                    </div>
+                    ${questionsHtml}
+                    <button type="button" class="add-btn" onclick="gradeQuiz()" style="width:100%;">Submit Quiz</button>
+                `;
+            } catch (err) {
+                const quizContainer = document.getElementById('quizContainer');
+                if (quizContainer) quizContainer.innerHTML = '';
+                alert('Error generating quiz. Please try again.');
+            }
+        }
+
+        function gradeQuiz() {
+            const quizContainer = document.getElementById('quizContainer');
+            if (!quizContainer) return;
+            if (!Array.isArray(lastGeneratedQuiz) || lastGeneratedQuiz.length < 3) {
+                alert('No quiz to grade. Generate one first.');
+                return;
+            }
+
+            let score = 0;
+            for (let i = 0; i < 3; i++) {
+                const q = lastGeneratedQuiz[i];
+                const correct = String(q.answer || '');
+                const selected = document.querySelector(`input[name="quiz_q_${i}"]:checked`);
+                const val = selected ? String(selected.value || '') : '';
+                if (val && val === correct) score++;
+            }
+
+            quizContainer.innerHTML = `
+                <div style="font-weight: 900; font-size: 18px; color: var(--text-main); margin-bottom: 10px;">You scored ${score}/3!</div>
+                <p style="margin:0 0 14px 0; color: var(--text-muted);">This is a temporary, single-session quiz (not saved).</p>
+                <button type="button" class="add-btn" onclick="generateTeamQuiz()" style="width:100%;">Generate Again</button>
+            `;
+        }
     </script>
+
+    <div id="proofPanel" style="position:fixed; right:-400px; top:0; width:350px; height:100%; background:var(--bg-panel); box-shadow:-4px 0 10px rgba(0,0,0,0.2); padding:20px; transition:0.3s; z-index:999;">
+        <h3 style="margin-bottom:15px;">Submit Proof</h3>
+        
+        <textarea id="proofTextInput" placeholder="Enter summary..." style="width:100%; height:100px; margin-bottom:10px;"></textarea>
+        
+        <input type="file" id="proofFileInput" accept="application/pdf,image/*,.doc,.docx,.ppt,.pptx,.txt" style="margin-bottom:10px;">
+        
+        <button type="button" onclick="submitProof()" class="add-btn" style="width:100%;">Submit</button>
+        <button type="button" onclick="cancelProofPanel()" style="width:100%; margin-top:10px;">Cancel</button>
+    </div>
 </body>
 </html>
