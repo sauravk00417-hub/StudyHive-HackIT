@@ -9,6 +9,7 @@ const Group = require('./groupModel.js');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const { v4: uuidv4 } = require('uuid');
 // --- NEW SOCKET.IO IMPORTS ---
 const http = require('http');
 const { Server } = require('socket.io');
@@ -21,12 +22,50 @@ const io = new Server(server, { cors: { origin: '*' } });
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static(__dirname));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Serve uploaded proof files
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
 app.use('/uploads', express.static(uploadsDir));
+
+async function requireAuth(req, res, next) {
+    const candidate = req.body.username || req.body.user || req.body.createdBy || req.body.ownerId || req.body.admin || req.body.approvedBy || req.body.completedBy || req.query.username;
+    const username = String(candidate || '').trim();
+    if (!username) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+    const user = await User.findOne({
+        $or: [
+            { username },
+            { googleName: username }
+        ]
+    });
+    if (!user) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+    req.authenticatedUser = user.username;
+    next();
+}
+
+async function validateTaskForeignKeys(req, res, next) {
+    if (req.body.groupId) {
+        const group = await Group.findOne({ groupId: req.body.groupId });
+        if (!group) {
+            return res.status(400).json({ error: 'Invalid groupId' });
+        }
+    }
+
+    const assignedTo = req.body.assignedTo;
+    if (assignedTo && assignedTo !== 'Unassigned') {
+        const user = await User.findOne({ username: assignedTo });
+        if (!user) {
+            return res.status(400).json({ error: 'Invalid assignedTo' });
+        }
+    }
+
+    next();
+}
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, uploadsDir),
@@ -87,7 +126,7 @@ app.get('/api/tasks', async (req, res) => {
     }
 });
 
-app.post('/api/tasks', async (req, res) => {
+app.post('/api/tasks', requireAuth, validateTaskForeignKeys, async (req, res) => {
     try {
         const newTask = new Task({ 
             title: req.body.title,
@@ -168,8 +207,12 @@ app.post('/api/generate-quiz', async (req, res) => {
 // User Registration/Login
 app.post('/api/users', async (req, res) => {
     try {
-        const { googleName, pic, email } = req.body;
-        let user = await User.findOne({ email });
+        const { googleName, pic, email, googleSub } = req.body;
+        const loginEmail = email || (googleSub ? `${googleSub}@google-oauth.local` : '');
+        if (!loginEmail) {
+            return res.status(400).json({ error: 'Google identity missing email/sub' });
+        }
+        let user = await User.findOne({ email: loginEmail });
         if (!user) {
             // Auto-generate unique username
             let username;
@@ -178,7 +221,7 @@ app.post('/api/users', async (req, res) => {
                 username = `${googleName.replace(/\s+/g, '').toUpperCase()}${counter}`;
                 counter++;
             } while (await User.findOne({ username }));
-            user = new User({ username, googleName, pic, email });
+            user = new User({ username, googleName, pic, email: loginEmail });
             await user.save();
         }
         res.status(200).json({ username: user.username, name: user.googleName, pic: user.pic });
@@ -188,16 +231,10 @@ app.post('/api/users', async (req, res) => {
 });
 
 // Group Endpoints
-app.post('/api/groups', async (req, res) => {
+app.post('/api/groups', requireAuth, async (req, res) => {
     try {
         const { groupName, admin } = req.body;
-        // Generate unique groupId
-        let groupId;
-        let counter = 1;
-        do {
-            groupId = `GRP${counter}`;
-            counter++;
-        } while (await Group.findOne({ groupId }));
+        const groupId = `GRP-${uuidv4()}`;
         const group = new Group({ groupId, groupName, admin, members: [admin] });
         await group.save();
         res.status(201).json({ groupId, groupName });
@@ -227,7 +264,7 @@ app.get('/api/groups', async (req, res) => {
     }
 });
 
-app.put('/api/groups/:groupId/add', async (req, res) => {
+app.put('/api/groups/:groupId/add', requireAuth, async (req, res) => {
     try {
         const { username } = req.body;
         // First, check if the user exists
@@ -250,12 +287,19 @@ app.put('/api/groups/:groupId/add', async (req, res) => {
     }
 });
 
-app.delete('/api/groups/:id', async (req, res) => {
+app.delete('/api/groups/:id', requireAuth, async (req, res) => {
     try {
-        const group = await Group.findById(req.params.id.trim());
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).json({ error: 'Invalid ID' });
+        }
 
+        const group = await Group.findById(req.params.id.trim());
         if (!group) {
             return res.status(404).json({ error: 'Group not found' });
+        }
+
+        if (group.admin !== req.body.username) {
+            return res.status(401).json({ error: 'Unauthorized' });
         }
 
         await Group.findByIdAndDelete(req.params.id.trim());
@@ -266,17 +310,10 @@ app.delete('/api/groups/:id', async (req, res) => {
     }
 });
 
-app.get('/api/groups/:username', async (req, res) => {
-    try {
-        const groups = await Group.find({ members: req.params.username });
-        res.status(200).json(groups);
-    } catch (err) {
-        res.status(500).json({ error: 'Failed to fetch groups' });
-    }
-});
+// Deprecated route removed. Use GET /api/groups?username=... instead.
 
 // UPGRADED: Route to toggle "Mark as Done" with PROF
-app.put('/api/tasks/:id', async (req, res) => {
+app.put('/api/tasks/:id', requireAuth, validateTaskForeignKeys, async (req, res) => {
     try {
         const task = await Task.findById(req.params.id);
         const userName = req.body.user || "Anonymous"; // Get the name from the request
@@ -302,7 +339,7 @@ app.put('/api/tasks/:id', async (req, res) => {
     }
 });
 
-app.put('/api/tasks/:id/proof', upload.single('proofFile'), async (req, res) => {
+app.put('/api/tasks/:id/proof', upload.single('proofFile'), requireAuth, async (req, res) => {
     try {
         const { proofText, completedBy } = req.body;
 
@@ -330,7 +367,7 @@ app.put('/api/tasks/:id/proof', upload.single('proofFile'), async (req, res) => 
     }
 });
 
-app.put('/api/tasks/:id/approve', async (req, res) => {
+app.put('/api/tasks/:id/approve', requireAuth, async (req, res) => {
     try {
         const { approvedBy } = req.body;
         if (!approvedBy || typeof approvedBy !== 'string') {
